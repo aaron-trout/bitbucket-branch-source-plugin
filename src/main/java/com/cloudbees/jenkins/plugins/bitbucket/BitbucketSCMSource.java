@@ -286,31 +286,27 @@ public class BitbucketSCMSource extends SCMSource {
         listener.getLogger().println("Looking up " + fullName + " for pull requests");
 
         final BitbucketApi bitbucket = getBitbucketConnector().create(repoOwner, repository, getScanCredentials());
-        if (bitbucket.isPrivate()) {
-            List<? extends BitbucketPullRequest> pulls = bitbucket.getPullRequests();
-            for (final BitbucketPullRequest pull : pulls) {
-                listener.getLogger().println(
-                        "Checking PR from " + pull.getSource().getRepository().getFullName() + " and branch "
-                                + pull.getSource().getBranch().getName());
+        List<? extends BitbucketPullRequest> pulls = bitbucket.getPullRequests();
+        for (final BitbucketPullRequest pull : pulls) {
+            listener.getLogger().println(
+                "Checking PR from " + pull.getSource().getRepository().getFullName() + " and branch "
+                + pull.getSource().getBranch().getName());
 
-                // Resolve full hash. See https://bitbucket.org/site/master/issues/11415/pull-request-api-should-return-full-commit
-                String hash = bitbucket.resolveSourceFullHash(pull);
-                if (hash != null) {
-                    observe(observer, listener,
-                            pull.getSource().getRepository().getOwnerName(),
-                            pull.getSource().getRepository().getRepositoryName(),
-                            pull.getSource().getBranch().getName(),
-                            hash,
-                            pull);
-                } else {
-                    listener.getLogger().format("Can not resolve hash: [%s]%n", pull.getSource().getCommit().getHash());
-                }
-                if (!observer.isObserving()) {
-                    return;
-                }
+            // Resolve full hash. See https://bitbucket.org/site/master/issues/11415/pull-request-api-should-return-full-commit
+            String hash = bitbucket.resolveSourceFullHash(pull);
+            if (hash != null) {
+            observe(observer, listener,
+                pull.getSource().getRepository().getOwnerName(),
+                pull.getSource().getRepository().getRepositoryName(),
+                pull.getSource().getBranch().getName(),
+                hash,
+                pull);
+            } else {
+                listener.getLogger().format("Can not resolve hash: [%s]%n", pull.getSource().getCommit().getHash());
             }
-        } else {
-            listener.getLogger().format("Skipping pull requests for public repositories%n");
+            if (!observer.isObserving()) {
+                return;
+            }
         }
     }
 
